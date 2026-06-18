@@ -1,2 +1,2 @@
 # Hum-Qadam
-Hum Qadam is an AI-powered coaching companion that helps coaches and teachers stay connected through continuous feedback, progress tracking, personalized learning recommendations, and follow up support, ensuring sustained professional growth and improved student outcomes.
+An AI-powered WhatsApp coaching and lesson-planning assistant designed for multigrade teachers in rural schools, providing personalized daily planning support, instructional coaching, and data-driven insights for teacher development.
