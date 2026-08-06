@@ -26,6 +26,35 @@ A running record of work sessions, tasks completed, and one honest lesson from e
 
 **Lesson learned:** Check your tools before you build your plan around them. Git is not pre-installed on Windows — it needs a separate download from git-scm.com. The fix takes five minutes, but discovering the gap at push time costs an hour of troubleshooting. Always verify the full local toolchain on day one.
 
+**Closed 2026-08-06:** Resolved — Git was installed and the repo has since been pushed to `github.com/mariakarim-jpg/Hum-Qadam` multiple times. Leaving this entry as history rather than deleting it; the journal is a record of what happened, not a live task list.
+
+---
+
+## Entry 6 — 2026-08-06
+
+**Task:** Ran a weekly memory review across the whole project. Found three true byte-identical duplicate files (`memory.md`/`notes/memory.md`, `whatsapp-assistant-plan.md`/`instructions/whatsapp-assistant-plan.md`, `agent_loop.md`/`instructions/agent_loop.md`) and one stale pre-merge draft (`instructions/CLAUDE.md`, superseded by root `CLAUDE.md` since the Beads merge). Deleted all four.
+
+`notes/planning.md` turned out to be a different case, and I got it wrong on the first pass: I initially deleted it as a "drifted offline copy," treating its extra length as noise. It wasn't noise — it was an independently-rewritten parallel draft of the same 25-section plan (nearly every heading is reworded, not copy-pasted), and buried in that rewrite were three genuinely new things the canonical plan never had: **FR-11 (Vacation/Pause Mode) and FR-12 (Help/Command Menu)** — both back actual Hard Rules in CLAUDE.md but were never captured as numbered FRs — **a `public_holidays` table plus three `teachers` scheduling fields** that other sections already depended on but the canonical schema never defined, and **a "Weekly Analytics Summary" prompt** with no equivalent anywhere in the canonical AI Prompt Architecture section. Restored the file from git, diffed every heading against the canonical `plan/` files to confirm nothing else was unique, merged all three gaps into `plan/05-functional-requirements.md`, `plan/10-database-schema.md`, and `plan/09-ai-prompt-architecture.md`, then deleted `notes/planning.md` for real. Also split `whatsapp-assistant-plan.md` — previously one 1,440-line file — into 25 section files under `plan/`, with the root file now acting as a short index (see Decision 4 in `notes/decisions.md`).
+
+**Lesson learned:** "Longer and out of sync" isn't automatically "stale" — it can mean the opposite: a copy that kept evolving after the canonical file stopped being updated. Diff before you delete. If I'd trusted my first read, this project would have permanently lost two functional requirements and a database table that other sections were already silently assuming existed.
+
+---
+
+## Entry 7 — 2026-08-06
+
+**Task:** Fresh-session check after the Entry 6 cleanup. Simulated opening a brand-new
+session with no re-briefing and asked: "What are the current hard rules for a lesson
+plan, and where's the full database schema?" Answer came back correctly from
+`CLAUDE.md` §2 (the seven hard rules, unchanged) and the updated `plan/10-database-schema.md`
+pointer (now including `public_holidays`) — with no need to check the now-deleted
+`instructions/CLAUDE.md` or `notes/planning.md`, and no re-explaining the project.
+
+**Lesson learned:** The real test of a cleanup isn't "does the file look tidier" —
+it's "does the next session get the right answer without being told twice." Closing
+duplicates and updating the pointers in `CLAUDE.md` is what made that possible; if
+I'd only deleted the stale copies without updating what still pointed at them, a
+fresh session would have loaded a broken reference instead of the right answer.
+
 ---
 
 ## Entry 4 — 2026-06-28

@@ -10,9 +10,18 @@ Session memory, architectural decisions, and planning notes. This folder documen
 
 | File | Purpose |
 |---|---|
-| `memory.md` | Dated session journal — one entry per work session, one real lesson per entry |
 | `decisions.md` | Architectural decision log — what was chosen, why, what was ruled out |
-| `planning.md` | Full copy of implementation plan (89,770 bytes) — for offline reference only |
+| `project_brief.md` | Original one-page project brief |
+
+**Note (2026-08-06):** `memory.md` and `planning.md` used to live here too.
+`memory.md` was a byte-identical duplicate of the root copy — deleted. `planning.md`
+was meant to be an offline copy of `whatsapp-assistant-plan.md`, but had actually
+diverged from it: two real functional requirements (FR-11, FR-12), a
+`public_holidays` table, and a "Weekly Analytics Summary" prompt that the canonical
+plan was missing. Those were merged into `../plan/05-functional-requirements.md`,
+`../plan/10-database-schema.md`, and `../plan/09-ai-prompt-architecture.md` before
+this file was deleted — nothing unique was lost. See `memory.md` Entry 6 and
+`decisions.md` Decision 4 at the project root.
 | `project_brief.md` | Early project brief — superseded by `instructions/CLAUDE.md` |
 
 ---

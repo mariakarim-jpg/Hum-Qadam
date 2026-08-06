@@ -22,13 +22,17 @@ We send daily WhatsApp messages to rural Pakistani teachers who manage two or mo
 
 ## 3. Pointers
 
-- Full AI system prompt and all Claude prompt templates → Section 9 of `whatsapp-assistant-plan.md`
-- Complete database schema (all 8 tables) → Section 10 of `whatsapp-assistant-plan.md`
-- All Urdu conversation scripts (onboarding, planning, reflection, help) → Section 8 of `whatsapp-assistant-plan.md`
-- Phase-by-phase development roadmap (Weeks 1–28) → Section 17 of `whatsapp-assistant-plan.md`
-- Budget estimates in PKR and USD → Section 23 of `whatsapp-assistant-plan.md`
-- Coach dashboard page designs → Section 14 of `whatsapp-assistant-plan.md`
-- Risk register and mitigation strategies → Section 20 of `whatsapp-assistant-plan.md`
+`whatsapp-assistant-plan.md` is now just an index — the 25 sections live as separate
+files under `plan/` (split 2026-08-06, see `notes/decisions.md` Decision 4), so only
+open the specific file you need:
+
+- Full AI system prompt and all Claude prompt templates → `plan/09-ai-prompt-architecture.md`
+- Complete database schema (all 8 tables) → `plan/10-database-schema.md`
+- All Urdu conversation scripts (onboarding, planning, reflection, help) → `plan/08-conversation-flows.md`
+- Phase-by-phase development roadmap (Weeks 1–28) → `plan/17-development-roadmap.md`
+- Budget estimates in PKR and USD → `plan/23-budget-estimates.md`
+- Coach dashboard page designs → `plan/14-dashboard-design.md`
+- Risk register and mitigation strategies → `plan/20-risk-analysis.md`
 
 ---
 

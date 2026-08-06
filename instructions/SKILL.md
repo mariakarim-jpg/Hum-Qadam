@@ -2,17 +2,19 @@
 
 ## What Lives Here
 
-AI rules, the full 25-section implementation plan, and the agent loop documentation. This folder is the source of truth for all design decisions, prompt templates, and system behaviour.
+Nothing, as of 2026-08-06. `CLAUDE.md`, `whatsapp-assistant-plan.md`, and
+`agent_loop.md` used to be duplicated here alongside their root-level originals.
+A weekly memory review found the copies were byte-identical and never
+independently updated, so they were deleted — the root versions are now the
+only copies. See `notes/memory.md` Entry 6 and `notes/decisions.md` Decision 4.
 
----
+## Where To Look Instead
 
-## Key Files
-
-| File | Purpose |
+| What you want | Where it actually lives |
 |---|---|
-| `CLAUDE.md` | Project brief loaded at every session start — hard rules, section pointers, work style |
-| `whatsapp-assistant-plan.md` | 25-section master plan — do not duplicate content; always point here |
-| `agent_loop.md` | Observe → Decide → Act → Feedback → Improve cycle with real GPS Nilore example |
+| Project brief, hard rules, work style | `../CLAUDE.md` |
+| The full implementation plan | `../whatsapp-assistant-plan.md` (index → `../plan/`) |
+| Agent loop documentation | `../agent_loop.md` |
 
 ---
 

@@ -46,3 +46,17 @@ A Google Doc or Notion wiki requires a login, can go offline, and breaks when li
 - Google Docs — requires internet and a Google account; formatting is not portable
 - Notion — adds a third-party dependency; content is locked behind a proprietary format
 - Splitting the plan into one file per section — creates navigation overhead and makes it harder to search the full document in one pass
+
+---
+
+## Decision 4 — Supersedes Decision 3: split the plan into one file per section after all
+
+**Date:** 2026-08-06
+**What we decided:** `whatsapp-assistant-plan.md` is no longer one 1,440-line file. It is now a short index file, with the 25 sections split into individual files under `plan/`. The index links to each section by name.
+
+**Why:** Decision 3's reasoning was about *searchability* — one file is easier to search in a single pass, and cross-references don't break. That reasoning still holds for a human skimming the doc in a text editor. It does not hold for an AI agent loading project context at the start of every session: loading all 1,440 lines to answer a question about, say, the database schema (Section 10) means paying the token cost of 24 irrelevant sections every single time. As the project has grown, that cost compounds. Splitting by section means a session only loads what it actually needs. Cross-references (e.g. CLAUDE.md's pointers) now link straight to the relevant file instead of a section number inside one large document — if anything, this makes references *more* precise, not less.
+
+**What we ruled out:**
+- Reverting once we hit this problem again and re-merging into one file — treats the same tradeoff as unresolved instead of picking a direction
+- Splitting a different file instead (e.g. `notes/memory.md`) to preserve Decision 3 as originally written — avoids the actual long file the lazy-loading problem was about
+- Keeping both the merged file and the split files in sync manually — this is exactly the kind of dual-source-of-truth setup that let `notes/planning.md` silently accumulate two real functional requirements (FR-11, FR-12) and a database table (`public_holidays`) that never made it back into this file (see Entry 6, `memory.md`); not repeating that mistake here — `plan/` is now the only place these sections live
