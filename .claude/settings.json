@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python .claude/hooks/notes-wrapup-trigger.py",
+            "command": "python \"C:/Users/HP/Test/.claude/hooks/notes-wrapup-trigger.py\"",
             "shell": "bash",
             "statusMessage": "Checking if a notes/ file needs a wrap-up log entry..."
           }

@@ -1,0 +1,25 @@
+{
+  "name": "hum-qadam-backend",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Hum Qadam API — WhatsApp multigrade lesson-planning assistant and coach dashboard backend",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js",
+    "test": "node --test test/*.test.js"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.32.0",
+    "@supabase/supabase-js": "^2.45.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "node-cron": "^3.0.3",
+    "twilio": "^5.3.0"
+  },
+  "devDependencies": {}
+}
