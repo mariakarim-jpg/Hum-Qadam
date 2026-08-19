@@ -25,6 +25,23 @@ npm start        # production
 npm test         # runs test/*.test.js
 ```
 
+## Scheduling: two ways, pick one per environment
+
+`src/jobs/morningCheckin.js` and `eveningReflection.js` are the actual job
+logic (plan/13). They can be triggered two ways:
+
+- **In-process `node-cron`** (`src/jobs/scheduler.js`) — only works if the
+  host never sleeps. Enable with `ENABLE_INTERNAL_CRON=true`.
+- **External HTTP trigger** (`src/routes/internal.js`,
+  `POST /internal/jobs/morning-checkin` + `/evening-reflection`, guarded by
+  `JOB_TRIGGER_SECRET`) — works regardless of whether the host sleeps,
+  because the triggering request itself wakes it. This is the default
+  (`ENABLE_INTERNAL_CRON=false`), used by `.github/workflows/*.yml` against
+  the free Render deploy — see `../DEPLOYMENT.md`.
+
+If you deploy somewhere always-on later, either works; internal cron is
+simpler if you don't need the external scheduler for anything else.
+
 ## What's real vs. stubbed
 
 **Actually implemented, not just scaffolded:**
@@ -39,6 +56,10 @@ npm test         # runs test/*.test.js
 - Coach-scoping on every dashboard query (`src/repositories/coachRepository.js`)
   — the Hard Rule "never share a teacher's data with anyone outside their
   assigned coach" is enforced here, not left to each route to remember
+- Both scheduling paths above — verified by actually booting the server and
+  hitting `/internal/jobs/morning-checkin` with no secret (401), the wrong
+  secret (401), and the right secret (ran, failed gracefully against a
+  placeholder Supabase URL rather than crashing the process)
 
 **Needs real credentials/integration work before it actually runs:**
 - Every Supabase, Anthropic, and Twilio call — this scaffold assumes valid
@@ -60,8 +81,9 @@ src/
   services/      aiService (plan/09 prompts), whatsappService, plan
                  validation, school-day logic, dashboard analytics
   conversation/  state machine + one handler per flow (plan/08)
-  routes/        webhook.js (inbound WhatsApp) + routes/dashboard/*
-                 (coach-scoped API for the frontend)
+  routes/        webhook.js (inbound WhatsApp), internal.js (job triggers)
+                 + routes/dashboard/* (coach-scoped API for the frontend)
   middleware/    auth (Supabase JWT -> coach), error handling
-  jobs/          node-cron: morning check-in, evening reflection (plan/13)
+  jobs/          morning check-in, evening reflection (plan/13) + the
+                 optional in-process node-cron scheduler
 ```

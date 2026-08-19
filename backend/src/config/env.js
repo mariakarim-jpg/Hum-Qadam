@@ -32,4 +32,12 @@ export const env = {
 
   morningCheckinCron: process.env.MORNING_CHECKIN_CRON ?? '50 4 * * 1-5',
   eveningReflectionCron: process.env.EVENING_REFLECTION_CRON ?? '55 13 * * 1-5',
+
+  // In-process node-cron only works if the host never sleeps. Leave this
+  // false (default) on a free host that spins down on idle (e.g. Render
+  // free tier) and use the externally-triggered /internal/jobs/* endpoints
+  // instead (see routes/internal.js and .github/workflows/). Set true only
+  // on an always-on host.
+  enableInternalCron: process.env.ENABLE_INTERNAL_CRON === 'true',
+  jobTriggerSecret: process.env.JOB_TRIGGER_SECRET,
 };

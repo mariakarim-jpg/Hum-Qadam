@@ -1,0 +1,59 @@
+# Render Blueprint — creates both services in one step via
+# Render Dashboard -> New -> Blueprint -> this repo.
+# See DEPLOYMENT.md for the full walkthrough and what each envVar needs.
+
+services:
+  # Backend: free Web Service. Spins down after 15 min idle — that's why
+  # scheduling is done via .github/workflows/ hitting /internal/jobs/*
+  # instead of in-process node-cron (ENABLE_INTERNAL_CRON=false below).
+  - name: hum-qadam-backend
+    type: web
+    runtime: node
+    plan: free
+    rootDir: backend
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /health
+    envVars:
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: SUPABASE_ANON_KEY
+        sync: false
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: ANTHROPIC_MODEL
+        value: claude-sonnet-5
+      - key: WHATSAPP_PROVIDER
+        value: twilio
+      - key: TWILIO_ACCOUNT_SID
+        sync: false
+      - key: TWILIO_AUTH_TOKEN
+        sync: false
+      - key: TWILIO_WHATSAPP_FROM
+        value: 'whatsapp:+14155238886'
+      - key: TIMEZONE
+        value: Asia/Karachi
+      - key: ENABLE_INTERNAL_CRON
+        value: 'false'
+      - key: JOB_TRIGGER_SECRET
+        generateValue: true
+      - key: FRONTEND_URL
+        sync: false # fill in once the frontend service below has a URL
+
+  # Frontend: free Static Site — unlike free Web Services, these do NOT
+  # spin down on idle (confirmed against Render's docs before writing this).
+  - name: hum-qadam-dashboard
+    type: web
+    runtime: static
+    rootDir: frontend
+    buildCommand: npm install && npm run build
+    staticPublishPath: dist
+    envVars:
+      - key: VITE_SUPABASE_URL
+        sync: false
+      - key: VITE_SUPABASE_ANON_KEY
+        sync: false
+      - key: VITE_API_BASE_URL
+        sync: false # fill in with the backend service's URL, from above
