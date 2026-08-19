@@ -11,7 +11,12 @@ import { startScheduler } from './jobs/scheduler.js';
 
 const app = express();
 
-app.use(cors());
+// Wide-open cors() is fine for local dev but not for a deployed API serving
+// real coach data — once FRONTEND_URL is set (the deployed dashboard's
+// origin), only that origin is allowed. Falls back to allow-all if unset,
+// so this doesn't break local dev or an early deploy before the frontend
+// has a URL yet.
+app.use(cors(env.frontendUrl ? { origin: env.frontendUrl } : {}));
 app.use(express.json());
 // Twilio posts form-encoded webhook bodies, not JSON.
 app.use('/webhook', express.urlencoded({ extended: false }));

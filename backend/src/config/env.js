@@ -14,6 +14,9 @@ function required(name, fallback) {
 export const env = {
   port: Number(process.env.PORT ?? 3000),
   timezone: process.env.TIMEZONE ?? 'Asia/Karachi',
+  // Deployed dashboard origin, e.g. https://hum-qadam-dashboard.up.railway.app
+  // Unset in local dev -> cors() falls back to allow-all (see server.js).
+  frontendUrl: process.env.FRONTEND_URL,
 
   supabaseUrl: required('SUPABASE_URL'),
   supabaseServiceRoleKey: required('SUPABASE_SERVICE_ROLE_KEY'),
