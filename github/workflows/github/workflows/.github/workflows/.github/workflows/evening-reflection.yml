@@ -1,0 +1,22 @@
+name: Trigger evening reflection
+
+# FR-05 / plan/13: 1:55pm PKT, Mon-Fri. PKT = UTC+5 (fixed, no DST); 13:55
+# PKT - 5h = 8:55 UTC same calendar day, so the weekday doesn't shift here
+# (unlike the morning job — see morning-checkin.yml for why that one does).
+#
+# GitHub Actions schedules aren't guaranteed to the minute — expect it to
+# fire a few minutes late during high load.
+on:
+  schedule:
+    - cron: '55 8 * * 1-5'
+  workflow_dispatch: {} # manual "Run workflow" button, for testing
+
+jobs:
+  trigger:
+    runs-on: ubuntu-latest
+    steps:
+      - name: POST /internal/jobs/evening-reflection
+        run: |
+          curl -sf -X POST "${{ secrets.BACKEND_URL }}/internal/jobs/evening-reflection" \
+            -H "X-Job-Secret: ${{ secrets.JOB_TRIGGER_SECRET }}" \
+            --max-time 90
