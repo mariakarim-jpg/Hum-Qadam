@@ -19,6 +19,22 @@ export async function findById(id) {
 }
 
 /**
+ * Self-registration (routes/dashboard/coaches.js). email must be the
+ * caller's own verified Supabase Auth email (req.authEmail from
+ * middleware/auth.js's requireSupabaseSession) — never a client-supplied
+ * value — so nobody can create a coach row under someone else's address.
+ */
+export async function create({ email, name, district }) {
+  const { data, error } = await supabase
+    .from('coaches')
+    .insert({ email, name, district: district || null, role: 'coach', dashboard_access: true })
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+/**
  * Throws if teacherId doesn't belong to coachId. Call this at the top of
  * any dashboard route that takes a teacherId param, before returning
  * anything about that teacher.

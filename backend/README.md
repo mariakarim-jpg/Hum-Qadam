@@ -55,6 +55,22 @@ logic (plan/13). They can be triggered two ways:
   wakes the process (Render). This is the default (`ENABLE_INTERNAL_CRON=false`),
   required on Vercel, optional-but-available on Render — see `../DEPLOYMENT.md`.
 
+## Coach self-registration
+
+`routes/dashboard/coaches.js` (`GET /api/coaches/me`, `POST /api/coaches/register`)
+closes a real gap: Supabase Auth itself doesn't know about our `coaches`
+table, so a magic-link sign-in from any email would previously succeed at
+the auth layer and only fail once individual dashboard API calls started
+403ing. Now the frontend checks `/api/coaches/me` right after sign-in and
+shows a one-time registration form if the email isn't a coach yet.
+
+These two routes use `requireSupabaseSession` (proves "a real signed-in
+user"), not `requireCoach` (proves "an existing coach") — a brand-new coach
+isn't in the table yet, so `requireCoach` would 403 them before they ever
+got a chance to register. `coachRepository.create()` always uses the
+caller's own verified email (`req.authEmail`), never anything client-supplied,
+so nobody can register a coach row under an address they don't control.
+
 ## What's real vs. stubbed
 
 **Actually implemented, not just scaffolded:**

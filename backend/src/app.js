@@ -6,7 +6,8 @@ import { internalRouter } from './routes/internal.js';
 import { teachersRouter } from './routes/dashboard/teachers.js';
 import { analyticsRouter } from './routes/dashboard/analytics.js';
 import { reportsRouter } from './routes/dashboard/reports.js';
-import { requireCoach } from './middleware/auth.js';
+import { coachesRouter } from './routes/dashboard/coaches.js';
+import { requireCoach, requireSupabaseSession } from './middleware/auth.js';
 import { errorHandler } from './middleware/errorHandler.js';
 
 /**
@@ -42,6 +43,11 @@ export function createApp() {
   app.use('/api/teachers', requireCoach, teachersRouter);
   app.use('/api/analytics', requireCoach, analyticsRouter);
   app.use('/api/reports', requireCoach, reportsRouter);
+
+  // Lighter auth than the routes above on purpose — a brand-new coach isn't
+  // in the coaches table yet, so requireCoach would 403 them before they
+  // ever got a chance to self-register. See middleware/auth.js.
+  app.use('/api/coaches', requireSupabaseSession, coachesRouter);
 
   app.use(errorHandler);
 

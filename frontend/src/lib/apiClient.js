@@ -39,4 +39,10 @@ export const api = {
   getEngagementTrend: () => request('/api/analytics/engagement-trend'),
   getSchoolComparison: () => request('/api/analytics/school-comparison'),
   getWeeklySummary: () => request('/api/reports/weekly-summary'),
+
+  // Self-registration — called right after Supabase sign-in to decide
+  // whether this email already has a coach row, and to create one if not.
+  getMyCoachStatus: () => request('/api/coaches/me'),
+  registerCoach: (name, district) =>
+    request('/api/coaches/register', { method: 'POST', body: JSON.stringify({ name, district }) }),
 };
