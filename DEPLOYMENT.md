@@ -1,17 +1,136 @@
 # Deploying Hum Qadam
 
-Two supported paths — pick one. Both deploy the same code; the only
-difference is how the 4:50am/1:55pm scheduled jobs (`plan/13`) actually fire.
+Three supported paths. Same code, same repo, every time — the difference is
+who's hosting it and how the 4:50am/1:55pm scheduled jobs (`plan/13`)
+actually fire.
 
-- **Option A — Railway (paid, ~$5/mo Hobby plan).** Simpler: the host never
-  sleeps, so the original in-process `node-cron` design just works.
-- **Option B — Render (free tier).** More setup: Render's free Web Service
-  spins down after 15 min idle, so scheduling is done externally instead
-  (see that section for why and how). Free Static Site frontend either way
-  doesn't sleep.
+- **Option C — Vercel (free, no card required). Recommended if you don't
+  want to pay or hand over payment info.** Verified against Vercel's own
+  docs: the Hobby plan is free with no billing cycle at all, and a card is
+  only ever asked for if you explicitly choose to upgrade to Pro — never for
+  Hobby usage itself. The trade-off: Vercel runs the backend as serverless
+  functions, not a persistent process, so scheduling is external (same
+  `/internal/jobs/*` + external-trigger pattern as Option B).
+- **Option A — Railway (paid, ~$5/mo Hobby plan).** Simpler if cost isn't a
+  concern: the host never sleeps, so the original in-process `node-cron`
+  design just works. Railway no longer has a real free tier.
+- **Option B — Render (free tier per their docs, but required a card at
+  signup for this project's account — never fully resolved why).** Kept
+  here for reference; Option C is the one actually recommended now.
 
-This repo supports both without any code changes — it's one env var
-(`ENABLE_INTERNAL_CRON`) that decides which scheduling mode is active.
+This repo supports all three without rewriting anything — `ENABLE_INTERNAL_CRON`
+picks the scheduling mode, and the backend has two interchangeable entry
+points: `src/server.js` (persistent process — Railway/Render) and
+`api/index.js` (serverless function — Vercel), both built from the same
+`src/app.js`. Verified locally before writing this: booted `server.js`
+normally, and separately proved `api/index.js`'s exported handler works
+correctly with zero `app.listen()` calls anywhere in the process (the exact
+thing Vercel's runtime does) — see `backend/test/vercel-handler.smoke.js`.
+
+---
+
+## Option C — Vercel (recommended: free, no card)
+
+### Before you start
+- A Vercel account — vercel.com, sign up with GitHub (no card needed for Hobby)
+- A free web-form cron service for the scheduled jobs, since Vercel has no
+  persistent process to run `node-cron` in. **cron-job.org** is a good pick:
+  free, no card, supports custom headers and POST — confirmed before
+  recommending it.
+
+### Step 1 — Deploy the backend
+1. Vercel dashboard → **Add New... → Project**
+2. Import `mariakarim-jpg/Hum-Qadam` (authorize GitHub access if it's your
+   first time — same kind of "which repos can Vercel see" prompt as any
+   GitHub integration)
+3. **Root Directory** → click **Edit** → select `backend`
+4. Framework Preset: Vercel should auto-detect **Other** / Node — leave
+   Build Command and Output Directory as their defaults (there's no build
+   step needed; `api/index.js` + `vercel.json` handle everything)
+5. **Environment Variables** — add:
+   ```
+   SUPABASE_URL=
+   SUPABASE_SERVICE_ROLE_KEY=
+   SUPABASE_ANON_KEY=
+   ANTHROPIC_API_KEY=
+   ANTHROPIC_MODEL=claude-sonnet-5
+   WHATSAPP_PROVIDER=twilio
+   TWILIO_ACCOUNT_SID=
+   TWILIO_AUTH_TOKEN=
+   TWILIO_WHATSAPP_FROM=whatsapp:+14155238886
+   TIMEZONE=Asia/Karachi
+   ENABLE_INTERNAL_CRON=false
+   JOB_TRIGGER_SECRET=
+   ```
+   Leave the blank ones as placeholders for now. For `JOB_TRIGGER_SECRET`,
+   type any long random string yourself — Vercel doesn't auto-generate one
+   the way Render does. `ENABLE_INTERNAL_CRON` **must** stay `false` here —
+   unlike Railway/Render this isn't just a recommendation, in-process cron
+   structurally cannot run on Vercel's serverless model at all.
+6. **Deploy**. Once it's live, the project page shows a URL like
+   `https://hum-qadam-backend.vercel.app`
+7. Verify: `curl https://hum-qadam-backend.vercel.app/health` → `{"ok":true}`
+
+### Step 2 — Deploy the frontend
+Vite bakes `VITE_*` vars in at build time, so backend needs to exist first.
+
+1. **Add New... → Project** again, same repo
+2. **Root Directory** → `frontend`
+3. Framework Preset: Vercel auto-detects **Vite** — leave Build Command
+   (`npm run build`) and Output Directory (`dist`) as the defaults
+4. **Environment Variables**:
+   ```
+   VITE_SUPABASE_URL=
+   VITE_SUPABASE_ANON_KEY=
+   VITE_API_BASE_URL=https://hum-qadam-backend.vercel.app
+   ```
+5. **Deploy**. Get its URL, e.g. `https://hum-qadam-dashboard.vercel.app`
+
+### Step 3 — Close the loop
+Back on the **backend** project → **Settings → Environment Variables** →
+set `FRONTEND_URL` to the frontend's URL from Step 2 → this triggers a
+redeploy automatically (or trigger one manually from the Deployments tab).
+This is what locks CORS down to just your dashboard.
+
+### Step 4 — Set up the external scheduler (cron-job.org)
+1. Sign up at cron-job.org (free, no card)
+2. Create a new cronjob:
+   - **Title:** Hum Qadam — Morning Check-in
+   - **URL:** `https://hum-qadam-backend.vercel.app/internal/jobs/morning-checkin`
+   - **Request method:** POST
+   - **Custom header:** `X-Job-Secret` = the exact value you typed for
+     `JOB_TRIGGER_SECRET` in Step 1
+   - **Schedule:** if the interface offers a timezone picker, set it to
+     Asia/Karachi (or Pakistan) and schedule 4:50 AM, Monday-Friday. If it's
+     UTC-only, use 23:50, Sunday-Thursday instead (same PKT→UTC conversion
+     explained in `.github/workflows/morning-checkin.yml`, kept in the repo
+     as a reference even though we're not using GitHub Actions here)
+3. Create a second cronjob the same way for evening reflection:
+   - **URL:** `.../internal/jobs/evening-reflection`
+   - **Schedule:** 1:55 PM PKT Mon-Fri, or 8:55 UTC Mon-Fri if UTC-only
+4. Most cron-job.org-style services let you **manually trigger a test run**
+   — do that for both before trusting the schedule, and confirm you get a
+   success response, not a 401 (secret mismatch) or timeout.
+
+### Step 5 — Database schema
+Run `backend/src/db/schema.sql` against your Supabase project once (SQL
+Editor, or `psql`) — creates all 8 tables from `plan/10-database-schema.md`.
+
+### Step 6 — Point Twilio at the webhook
+```
+https://hum-qadam-backend.vercel.app/webhook/whatsapp
+```
+
+### Vercel checklist
+- [ ] Real Supabase/Anthropic/Twilio credentials set on the backend project
+- [ ] `schema.sql` run against Supabase
+- [ ] `ENABLE_INTERNAL_CRON=false` (must stay this way on Vercel)
+- [ ] `VITE_API_BASE_URL` set on frontend, `FRONTEND_URL` set on backend
+- [ ] cron-job.org (or similar) configured for both jobs, each manually
+      test-triggered and confirmed successful
+- [ ] Webhook URL pointed at the backend
+- [ ] At least one row in `coaches` (your email) — otherwise `requireCoach`
+      403s everyone, including you
 
 ---
 

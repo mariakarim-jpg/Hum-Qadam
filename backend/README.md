@@ -25,22 +25,35 @@ npm start        # production
 npm test         # runs test/*.test.js
 ```
 
+## Two ways to run this app, from the same code
+
+- **`src/server.js`** — a persistent process. Local dev, Railway, Render.
+  Calls `app.listen()` and (optionally) starts the in-process scheduler.
+- **`api/index.js`** — a Vercel serverless function. Exports the same app
+  with no `.listen()` call; Vercel invokes it per-request instead. Verified
+  this actually works with zero `app.listen()` calls anywhere in the process
+  via `test/vercel-handler.smoke.js` (`node test/vercel-handler.smoke.js`).
+
+Both are built from **`src/app.js`**, which is where all real route/middleware
+wiring lives — neither entry point can drift out of sync with the other
+since there's only one place the app is actually assembled.
+
 ## Scheduling: two ways, pick one per environment
 
 `src/jobs/morningCheckin.js` and `eveningReflection.js` are the actual job
 logic (plan/13). They can be triggered two ways:
 
-- **In-process `node-cron`** (`src/jobs/scheduler.js`) — only works if the
-  host never sleeps. Enable with `ENABLE_INTERNAL_CRON=true`.
+- **In-process `node-cron`** (`src/jobs/scheduler.js`) — only works on a
+  persistent process that never sleeps (Railway, or Render if you're willing
+  to accept its spin-down). Enable with `ENABLE_INTERNAL_CRON=true`. **Not
+  possible at all on Vercel** — there's no persistent process for a timer to
+  run in, regardless of this flag.
 - **External HTTP trigger** (`src/routes/internal.js`,
   `POST /internal/jobs/morning-checkin` + `/evening-reflection`, guarded by
-  `JOB_TRIGGER_SECRET`) — works regardless of whether the host sleeps,
-  because the triggering request itself wakes it. This is the default
-  (`ENABLE_INTERNAL_CRON=false`), used by `.github/workflows/*.yml` against
-  the free Render deploy — see `../DEPLOYMENT.md`.
-
-If you deploy somewhere always-on later, either works; internal cron is
-simpler if you don't need the external scheduler for anything else.
+  `JOB_TRIGGER_SECRET`) — works regardless of whether/how the host sleeps,
+  because the triggering request itself invokes the function (Vercel) or
+  wakes the process (Render). This is the default (`ENABLE_INTERNAL_CRON=false`),
+  required on Vercel, optional-but-available on Render — see `../DEPLOYMENT.md`.
 
 ## What's real vs. stubbed
 
@@ -74,7 +87,12 @@ simpler if you don't need the external scheduler for anything else.
 ## Project layout
 
 ```
+api/
+  index.js       Vercel serverless entry point (exports src/app.js's app)
 src/
+  app.js         builds the Express app — the one place routes/middleware
+                 are actually wired up
+  server.js      persistent-process entry point (local dev/Railway/Render)
   config/        env loading, Supabase client, hard-rule constants
   db/            schema.sql (source: plan/10)
   repositories/  one file per table, thin Supabase query wrappers
@@ -86,4 +104,7 @@ src/
   middleware/    auth (Supabase JWT -> coach), error handling
   jobs/          morning check-in, evening reflection (plan/13) + the
                  optional in-process node-cron scheduler
+test/
+  planValidationService.test.js   the real suite (npm test)
+  vercel-handler.smoke.js         one-off manual check, not part of npm test
 ```
