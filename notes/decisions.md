@@ -60,3 +60,20 @@ A Google Doc or Notion wiki requires a login, can go offline, and breaks when li
 - Reverting once we hit this problem again and re-merging into one file — treats the same tradeoff as unresolved instead of picking a direction
 - Splitting a different file instead (e.g. `notes/memory.md`) to preserve Decision 3 as originally written — avoids the actual long file the lazy-loading problem was about
 - Keeping both the merged file and the split files in sync manually — this is exactly the kind of dual-source-of-truth setup that let `notes/planning.md` silently accumulate two real functional requirements (FR-11, FR-12) and a database table (`public_holidays`) that never made it back into this file (see Entry 6, `memory.md`); not repeating that mistake here — `plan/` is now the only place these sections live
+
+---
+
+## Decision 5 — Coach dashboard auth: email+password instead of magic-link
+
+**Date:** 2026-09-01
+**What we decided:** The coach dashboard (`frontend/src/pages/Login.jsx`) uses Supabase email+password sign-in/sign-up, not magic-link email OTP. This only affects coaches — teachers still interact purely through WhatsApp, untouched by this decision.
+
+**Why:** Found during real end-to-end browser testing (Chrome DevTools MCP), not a theoretical concern: Supabase's free-tier project uses its built-in email service, which has a **fixed 2-emails/hour limit that cannot be raised without configuring custom SMTP** (confirmed directly in the Supabase dashboard — the rate-limit field is locked with that exact message). Magic-link auth sends one email *per login attempt*, so this cap was exhausted almost immediately during testing and blocked verifying every authenticated flow (Overview, Teacher List, Analytics, Reports, self-registration) for an extended stretch. Password auth needs at most one email per coach, ever (the signup confirmation) — not one per login — so the same 2/hour cap stops being an operational bottleneck.
+
+**The trade-off, accepted knowingly:** coaches now manage a password instead of just clicking a link. Per `plan/03-user-personas.md`, coach tech-comfort varies (Nadia is described as "low"), so this is a real cost, not a free win — accepted because the alternative (magic-link) was actively blocking both testing today and, by the same mechanism, would block real coaches from logging in more than twice an hour once the product has any real usage.
+
+**What we ruled out:**
+- Waiting out the rate limit each time it's hit — doesn't fix the underlying ceiling, just defers hitting it again
+- The Admin API's `generate_link` endpoint (bypasses the email-send limit since it doesn't send an email) as a permanent fix — solves testing, not real coaches logging in from their own devices day to day
+- Setting up custom SMTP right now to keep magic-link — legitimate future option, but a bigger, separate piece of setup than this project needs to unblock today
+- Disabling Supabase's "Confirm email" requirement for new signups — would remove the one-time email dependency entirely, but also removes the only proof a new coach actually owns the email they're registering with; kept on unless a future session decides the trade-off is worth it
