@@ -76,4 +76,18 @@ A Google Doc or Notion wiki requires a login, can go offline, and breaks when li
 - Waiting out the rate limit each time it's hit — doesn't fix the underlying ceiling, just defers hitting it again
 - The Admin API's `generate_link` endpoint (bypasses the email-send limit since it doesn't send an email) as a permanent fix — solves testing, not real coaches logging in from their own devices day to day
 - Setting up custom SMTP right now to keep magic-link — legitimate future option, but a bigger, separate piece of setup than this project needs to unblock today
-- Disabling Supabase's "Confirm email" requirement for new signups — would remove the one-time email dependency entirely, but also removes the only proof a new coach actually owns the email they're registering with; kept on unless a future session decides the trade-off is worth it
+
+---
+
+## Decision 6 — Turned off "Confirm email" for new coach signups
+
+**Date:** 2026-09-01
+**What we decided:** Supabase's email-confirmation requirement is disabled project-wide. `POST /auth/v1/signup` now returns an active session immediately — no confirmation email, no wait, no dependency on Supabase's email quota at all for the signup step.
+
+**Why:** Testing surfaced a second real gap, not just the original login-email problem: our own signup flow's confirmation email is *also* subject to the same 2-emails/hour cap (Decision 5), and — worse — a rate-limited confirmation email fails *silently* from the user's point of view. `Login.jsx` showed "Check your email to confirm your account" as if it had succeeded, because `supabase.auth.signUp()` only reports whether the *account* was created, not whether the *confirmation email* actually sent — those are two separate steps server-side that can diverge. A coach in this state would wait indefinitely for an email that was never coming, with the app telling them everything was fine. Turning off confirmation removes that entire failure class by removing the dependency itself, not just handling the error better.
+
+**The trade-off, accepted knowingly:** anyone can now register a coach account with an email address they don't own or control — there's no proof of identity at signup anymore. Accepted because this system already has a second, independent gate that a bogus signup can't get past: registering only ever creates a `coaches` row with zero assigned teachers (see `backend/src/routes/dashboard/coaches.js` — `POST /register` never touches `teachers.coach_id`). A fabricated account sees an empty dashboard forever unless someone deliberately assigns real teachers to it. The actual sensitive data — teacher profiles, lesson plans, reflections — stays gated by that assignment step, not by email ownership.
+
+**What we ruled out:**
+- Leaving it on and just fixing the silent-failure UI bug instead — would have correctly surfaced the failure, but doesn't remove the underlying 2/hour ceiling that caused it, so the same wall reappears with real usage
+- Custom SMTP as the fix instead of disabling confirmation — legitimate, but bigger setup than this project needs right now; revisit once there's a real reason to re-add identity verification at signup (e.g. once teacher assignment isn't a separate manual step and a bogus account could self-assign real data)
