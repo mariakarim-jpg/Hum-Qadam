@@ -31,13 +31,27 @@ export default function TeacherList() {
       <h1 className="text-xl font-semibold">Teachers</h1>
 
       <div className="flex gap-3">
-        <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="rounded-md border border-gray-300 px-2 py-1 text-sm">
+        <select
+          id="status-filter"
+          name="status-filter"
+          aria-label="Filter by status"
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value)}
+          className="rounded-md border border-gray-300 px-2 py-1 text-sm"
+        >
           <option value="all">All statuses</option>
           <option value="on_track">On Track</option>
           <option value="needs_attention">Needs Attention</option>
           <option value="flagged">Flagged</option>
         </select>
-        <select value={schoolFilter} onChange={(e) => setSchoolFilter(e.target.value)} className="rounded-md border border-gray-300 px-2 py-1 text-sm">
+        <select
+          id="school-filter"
+          name="school-filter"
+          aria-label="Filter by school"
+          value={schoolFilter}
+          onChange={(e) => setSchoolFilter(e.target.value)}
+          className="rounded-md border border-gray-300 px-2 py-1 text-sm"
+        >
           <option value="all">All schools</option>
           {schools.map((s) => (
             <option key={s} value={s}>
