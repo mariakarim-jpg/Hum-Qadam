@@ -1,0 +1,14 @@
+Use the Chrome DevTools MCP to test https://hum-qadam-de85.vercel.app end to end, like a real coach opening the dashboard this morning.
+
+Steps:
+1. Navigate to the site. Take a snapshot. Check the browser console and network tab for errors.
+2. Sign in with testcoach.humqadam2@gmail.com / testpassword123. Confirm the dashboard actually loads (not a blank page or an error).
+3. Open Teacher List. Confirm it renders without a console/network error.
+4. Open Analytics. Confirm the page renders without a console/network error.
+5. Sign out. Confirm it returns to the login screen.
+
+Decide pass or fail:
+- If EVERY step above works with no console errors and no failed (4xx/5xx) network requests: do NOT call the PushNotification tool. Do not send any message. Just print the single line: RESULT: PASS
+- If ANYTHING is broken (page won't load, a step errors, a console error appears, a network request fails): call the PushNotification tool exactly once. The message must name the exact flow/step that broke and the exact error (e.g. "Hum Qadam E2E: Teacher List failed to load - GET /api/teachers returned 500"). Then print: RESULT: FAIL: <one-line summary of what broke>
+
+Do not guess — actually drive the browser and observe what happens, the same way a real end-to-end test would. Keep this run short and focused: this is a daily smoke check, not a full regression pass.
