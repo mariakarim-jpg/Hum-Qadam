@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabaseClient.js';
 
 // plan/06 NFR: "Coach dashboard requires authenticated login."
@@ -8,6 +8,29 @@ export default function Login() {
   const [email, setEmail] = useState('');
   const [sent, setSent] = useState(false);
   const [error, setError] = useState(null);
+
+  // A clicked magic link that's expired/invalid doesn't come back as a
+  // normal form-submission error — Supabase redirects back here with
+  // #error=...&error_description=... in the URL hash instead. Found via
+  // real browser testing: without this, the app showed "Check your inbox"
+  // (the default, unauthenticated state) even when the link had genuinely
+  // failed, leaving the user with no indication anything went wrong or
+  // that they need to request a new link.
+  useEffect(() => {
+    const hash = window.location.hash;
+    if (!hash.includes('error=')) return;
+
+    const params = new URLSearchParams(hash.slice(1));
+    const description = params.get('error_description');
+    setError(
+      description
+        ? decodeURIComponent(description.replace(/\+/g, ' '))
+        : 'That sign-in link is no longer valid. Please request a new one.'
+    );
+    // Clear the hash so the error doesn't reappear if the page is refreshed
+    // or the user navigates back here later.
+    window.history.replaceState(null, '', window.location.pathname);
+  }, []);
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -28,6 +51,9 @@ export default function Login() {
           <form onSubmit={handleSubmit} className="space-y-3">
             <input
               type="email"
+              id="email"
+              name="email"
+              autoComplete="email"
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
